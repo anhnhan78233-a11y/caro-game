@@ -3,264 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Caro - Hoa Anh Đào Rơi</title>
+    <title>Game Caro - Sakura Garden</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         body {
-            background: linear-gradient(135deg, #ffd1dc 0%, #ffe6eb 50%, #fff0f5 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             overflow: hidden;
             position: relative;
+            /* Phông nền phong cảnh hoa anh đào núi Phú Sĩ */
+            background: url('https://images.unsplash.com/photo-1528164344705-47542687990d?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
         }
 
-        /* Container cho các cánh hoa anh đào */
-        #sakura-container {
+        /* Lớp phủ mờ nền */
+        .bg-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 235, 240, 0.2);
+            z-index: 0;
+        }
+
+        /* Effect Sakura Canvas */
+        #sakura-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
-            overflow: hidden;
             z-index: 1;
         }
 
-        .petal {
+        /* Modal Menu Chọn Chế Độ */
+        .menu-modal {
             position: absolute;
-            background: radial-gradient(circle, #ffb7c5 0%, #ff69b4 100%);
-            border-radius: 15px 0 15px 0;
-            opacity: 0.8;
-            pointer-events: none;
-            animation: fall linear infinite;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(-10px) rotate(0deg);
-                opacity: 0.9;
-            }
-            100% {
-                transform: translateY(105vh) rotate(360deg);
-                opacity: 0.2;
-            }
-        }
-
-        /* Giao diện chính game */
-        .game-container {
-            z-index: 2;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 25px 35px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(220, 100, 130, 0.2);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            padding: 40px 50px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(219, 112, 147, 0.3);
             text-align: center;
-            border: 2px solid rgba(255, 182, 193, 0.6);
+            border: 2px solid #ffb6c1;
+            transition: all 0.3s ease;
         }
 
-        h1 {
+        .menu-modal h1 {
             color: #d81b60;
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        .status {
+        .btn-option {
+            display: block;
+            width: 100%;
+            padding: 14px 28px;
+            margin: 12px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 117, 140, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 117, 140, 0.6);
+        }
+
+        .room-info {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #555;
+            background: #ffe6ea;
+            padding: 8px 15px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        /* Giao diện chính Bàn Cờ */
+        .main-game {
+            display: none;
+flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .game-header {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(6px);
+            padding: 12px 30px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid #ffb6c1;
+        }
+
+        .status-text {
             font-size: 1.2rem;
-            color: #4a4a4a;
-            margin-bottom: 20px;
-            font-weight: 600;
+            font-weight: bold;
+            color: #333;
         }
 
-        /* Bàn cờ */
+        .board-container {
+            position: relative;
+            background: #e4a960;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), inset 0 0 15px rgba(0,0,0,0.2);
+            border: 4px solid #b87b31;
+        }
+
         .board {
             display: grid;
-            grid-template-columns: repeat(15, 30px);
-            grid-template-rows: repeat(15, 30px);
+            grid-template-columns: repeat(15, 32px);
+            grid-template-rows: repeat(15, 32px);
             gap: 1px;
-            background-color: #d1a153;
-            padding: 5px;
-            border-radius: 8px;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
-            margin: 0 auto;
+            background-color: #8c5821;
         }
 
         .cell {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             background-color: #fce4ec;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 900;
             cursor: pointer;
-user-select: none;
-            transition: background 0.2s;
+            transition: background 0.15s;
         }
 
         .cell:hover {
             background-color: #f8bbd0;
         }
 
-        .cell.x {
-            color: #e91e63;
+        .cell.x { color: #e91e63; }
+        .cell.o { color: #1e88e5; }
+
+        /* SVG Vẽ đường thắng */
+        #strike-svg {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: calc(100% - 24px);
+            height: calc(100% - 24px);
+            pointer-events: none;
+            z-index: 5;
         }
 
-        .cell.o {
-            color: #1e88e5;
+        #strike-line {
+            stroke: #ff1744;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 0.5s forwards ease-in-out;
         }
 
-        /* Nút reset */
-        .btn-reset {
-            margin-top: 20px;
-            padding: 10px 25px;
-            font-size: 1rem;
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Overlay kết quả Win/Fail */
+        .result-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.4s forwards;
+        }
+
+        .result-title {
+            font-size: 6rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .result-title.win {
+            color: #ff69b4;
+            text-shadow: 0 0 20px #ff1493, 0 0 40px #ff69b4, 0 0 60px #fff;
+animation: pulseWin 1s infinite alternate;
+        }
+
+        .result-title.fail {
+            color: #7f8c8d;
+            text-shadow: 0 0 10px #2c3e50;
+            animation: shakeFail 0.5s;
+        }
+
+        @keyframes pulseWin {
+            from { transform: scale(0.95); }
+            to { transform: scale(1.08); }
+        }
+
+        @keyframes shakeFail {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .btn-restart {
+            margin-top: 25px;
+            padding: 12px 35px;
+            font-size: 1.1rem;
             font-weight: bold;
-            color: #fff;
-            background: linear-gradient(45deg, #ff6b81, #ff4757);
+            color: white;
+            background: linear-gradient(45deg, #ff4081, #ff80ab);
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-2deg);
-            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+            box-shadow: 0 5px 20px rgba(255, 64, 129, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <div id="sakura-container"></div>
+    <div class="bg-overlay"></div>
+    <canvas id="sakura-canvas"></canvas>
 
-    <div class="game-container">
-        <h1>🌸 Caro Hoa Anh Đào 🌸</h1>
-        <div class="status" id="status">Lượt chơi: Người chơi X</div>
-        <div class="board" id="board"></div>
-        <button class="btn-reset" onclick="resetGame()">Chơi lại</button>
+    <!-- Màn hình Menu Ban Đầu -->
+    <div class="menu-modal" id="menu-modal">
+        <h1>🌸 Caro Sakura 🌸</h1>
+        <button class="btn-option" onclick="startGame('pve')">🤖 Chơi Với Máy</button>
+        <button class="btn-option" onclick="startGame('pvp')">👥 Chơi 2 Người (Tạo Phòng)</button>
+        <div class="room-info" id="room-info">Mã Phòng ID: <b id="room-id-text">---</b></div>
+    </div>
+
+    <!-- Màn hình Trận Đấu -->
+    <div class="main-game" id="main-game">
+        <div class="game-header">
+            <div class="status-text" id="status">Lượt chơi: Người chơi X</div>
+            <button class="btn-option" style="margin:0; padding:8px 18px; font-size:0.9rem" onclick="backToMenu()">🏠 Menu</button>
+        </div>
+
+        <div class="board-container">
+            <svg id="strike-svg">
+                <line id="strike-line" x1="0" y1="0" x2="0" y2="0" />
+            </svg>
+            <div class="board" id="board"></div>
+        </div>
+    </div>
+
+    <!-- Màn hình Báo Kết Quả -->
+    <div class="result-overlay" id="result-overlay">
+        <div class="result-title" id="result-title">WIN</div>
+        <button class="btn-restart" onclick="resetGame()">Chơi Lại Tải Trận Mới</button>
     </div>
 
     <script>
-        // --- Hiệu ứng Cánh hoa anh đào rơi ---
-        const sakuraContainer = document.getElementById('sakura-container');
-        const PETAL_COUNT = 30;
+        // === HỆ THỐNG CANVAS HIỆU ỨNG HOA ANH ĐÀO ===
+        const canvas = document.getElementById('sakura-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
 
-        function createPetal() {
-            const petal = document.createElement('div');
-            petal.classList.add('petal');
-            
-            const size = Math.random() * 10 + 10; // 10px - 20px
-            petal.style.width = `${size}px`;
-            petal.style.height = `${size}px`;
-            
-            petal.style.left = `${Math.random() * 100}vw`;
-            
-            const duration = Math.random() * 5 + 5; // 5s - 10s
-            petal.style.animationDuration = `${duration}s`;
-            
-            const delay = Math.random() * 5;
-            petal.style.animationDelay = `${delay}s`;
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
 
-            sakuraContainer.appendChild(petal);
-        }
+        let petals = [];
+        let effectMode = 'normal'; // 'normal', 'bloom' (win), 'wither' (fail)
 
-        for (let i = 0; i < PETAL_COUNT; i++) {
-            createPetal();
-        }
+        class Petal {
+            constructor() {
+                this.reset();
+}
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height;
+                this.size = Math.random() * 8 + 8;
+                this.speedY = Math.random() * 1.5 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 2 - 1;
 
-        // --- Logic Game Caro 15x15 ---
-        const BOARD_SIZE = 15;
-        let boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(''));
-        let currentPlayer = 'X';
-        let gameActive = true;
-
-        const boardElement = document.getElementById('board');
-        const statusElement = document.getElementById('status');
-
-        function createBoard() {
-            boardElement.innerHTML = '';
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-                    cell.addEventListener('click', handleCellClick);
-boardElement.appendChild(cell);
+                if (effectMode === 'wither') {
+                    // Hoa úa tàn màu héo xám
+                    this.color = `hsl(${Math.random() * 20 + 20}, 20%, ${Math.random() * 20 + 30}%)`;
+                    this.speedY = Math.random() * 3 + 2; // Rơi nhanh hơn
+                } else if (effectMode === 'bloom') {
+                    // Hoa nở rực rỡ sắc hồng
+                    this.color = `hsl(${Math.random() * 20 + 330}, 100%, ${Math.random() * 20 + 70}%)`;
+                    this.speedY = Math.random() * 2 + 1.5;
+                } else {
+                    // Hoa thường rơi nhẹ nhàng
+                    this.color = `hsl(${Math.random() * 20 + 340}, 80%, 85%)`;
                 }
             }
-        }
 
-        function handleCellClick(e) {
-            const r = parseInt(e.target.dataset.row);
-            const c = parseInt(e.target.dataset.col);
-
-            if (boardState[r][c] !== '' || !gameActive) return;
-
-            boardState[r][c] = currentPlayer;
-            e.target.textContent = currentPlayer;
-            e.target.classList.add(currentPlayer.toLowerCase());
-
-            if (checkWin(r, c)) {
-                statusElement.textContent = `🎉 Người chơi ${currentPlayer} chiến thắng!`;
-                gameActive = false;
-                return;
-            }
-
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            statusElement.textContent = `Lượt chơi: Người chơi ${currentPlayer}`;
-        }
-
-        function checkWin(r, c) {
-            const player = boardState[r][c];
-            const directions = [
-                [[0, 1], [0, -1]],   // Ngang
-                [[1, 0], [-1, 0]],   // Dọc
-                [[1, 1], [-1, -1]],  // Chéo chính
-                [[1, -1], [-1, 1]]   // Chéo phụ
-            ];
-
-            return directions.some(dir => {
-                let count = 1;
-                dir.forEach(([dr, dc]) => {
-                    let nr = r + dr;
-                    let nc = c + dc;
-                    while (
-                        nr >= 0 && nr < BOARD_SIZE &&
-                        nc >= 0 && nc < BOARD_SIZE &&
-                        boardState[nr][nc] === player
-                    ) {
-                        count++;
-                        nr += dr;
-                        nc += dc;
-                    }
-                });
-                return count >= 5;
-            });
-        }
-
-        function resetGame() {
-            boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(''));
-            currentPlayer = 'X';
-            gameActive = true;
-            statusElement.textContent = `Lượt chơi: Người chơi ${currentPlayer}`;
-            createBoard();
-        }
-
-        // Khởi tạo bàn cờ lần đầu
-        createBoard();
-    </script>
-</body>
-</html>
+            update() {
+                this.y += this.speedY;
